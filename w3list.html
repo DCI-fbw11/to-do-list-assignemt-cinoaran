@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<style>
+    .container{
+        width: 40%;
+    }
+    .well{
+        padding: 20px;
+        background-color:#2E8B57; 
+        border-bottom-left-radius: 6px;   
+        border-bottom-right-radius: 6px;
+        border: 1px solid #444;    
+    }
+    h3, label, li, a {
+        color: #fff;
+    }
+    .list-group-item{
+        border: 1px solid #000;
+    }
+
+
+    /* When clicked on, add a background color and strike out text */
+    ul li.checked {
+        padding: 25px;
+        background: #fff;
+        color: #fff;
+        text-decoration: line-through;
+    }
+
+    .form-control.update{
+        border:none;
+        margin-bottom: 6px;
+        text-align:center;
+        border-bottom: 1px solid #dedede;        
+    }
+
+    .btn.btn-danger.btn-sm{
+        float: right;
+    }
+    .alert-box-delete{
+        background: rgb(224, 82, 82);
+    }
+
+    .alert-box-update{
+        background: rgb(92, 81, 236);
+    }  
+
+    .alert-box-delete, .alert-box-update{
+        
+        margin-bottom: 10px;
+        border-radius: 6px;
+        padding: 9px;
+        line-height: 1em;
+    }
+
+/* Add a "checked" mark when clicked on */
+    ul li.checked::before {
+        content: '';
+        position: absolute;
+        border-color: #2E8B57;
+        border-style: solid;
+        border-width: 0 3px 3px 0;
+        top: 10px;
+        left: 15px;
+        transform: rotate(45deg);
+        height: 15px;
+        width: 7px;
+    }
+
+    .dbl-info{
+        text-align: center;
+        color: #444;
+        display: block;
+        font-size: .7em;
+    }
+
+    @media only screen and (max-width: 600px) {
+    .container {
+        width: 100%;
+    }
+}
+
+
+</style>
+</head>
+<body>
+
+    <div class="container">
+        <div>
+            <div class="well">
+                <h3>Todo List</h3>
+                <div class="message" id="message-delete"></div>
+                <div class="message" id="message-update"></div>
+                <form>
+                    <div class="form-group">
+                        <input class="form-control" type="text" id="myText" placeholder="Enter your todo text" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" class="btn btn-dark btn-block" value="Add your todo" id="submit">
+                    </div>
+                </form>
+            <ul class="list-group" id="MyList"></ul>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script>
+
+    class Todo {
+
+        constructor(element) {  
+            this.element = element;        
+            this.textList = []; 
+            this.checked = false;
+            this.textBody = '';
+        }
+
+        deleteAll() {
+            while(this.element.firstChild){
+                this.element.removeChild(this.element.firstChild);
+            }            
+        }
+
+        showText(){
+            this.deleteAll();
+            let listBody = this.textBody;
+            let liStatus;            
+             
+            this.textList.forEach((showText, index) => { 
+                (this.textList[index].checked) === true ? liStatus = 'list-group-item checked' : liStatus = 'list-group-item';
+                listBody = `
+                            <li id="${index}" class="${liStatus}">
+                            <span class="dbl-info">Double click todo text for toggling done / todo !!</span>
+                            <input id="input-${index}" type="text" ondblclick="listFields.showSelected(this)" class="form-control update" value="${showText.text}">
+                            <a id="${index}" href="#" class="btn btn-primary btn-sm" onclick="listFields.textUpdate(this)"> Update</a>
+                            <a id="${index}" href="#" class="btn btn-danger btn-sm" onclick="listFields.textDelete(this)"> Delete</a>
+                            </li>`;  
+
+                    this.element.innerHTML += listBody; 
+                   
+            }); 
+                if(this.textList.length > 0){
+                    listBody = `<li id="deleteAll" class="list-group-item">
+                                    <a id="deleteAll" href="#" class="btn btn-dark btn-sm btn-block" onclick="listFields.deleteItems(this)"> Delete All</a>
+                                </li>`;
+                    this.element.innerHTML += listBody;            
+                }
+                 
+        }
+
+        textAdd(item){  
+            this.textList.push({text:item, checked:this.checked}); 
+            this.showText()
+            
+        }
+
+        textDelete(arg){             
+            if(confirm('Are you sure delete this todo!!')){                
+                this.textList.splice([arg.id], 1); 
+                document.getElementById('message-delete').innerHTML = '<div class="alert-box-delete" role="alert">Todo deleted !!</div>';
+           
+                setTimeout(function() {
+                    document.getElementById('message-delete').innerHTML = '';
+                }, 3000);
+                this.showText(); 
+            }    
+              
+        }
+
+        textUpdate(arg) {             
+            let textToUpdate = document.getElementById('input-'+arg.id).value;            
+            console.log(document.getElementById(textToUpdate));        
+            this.textList[arg.id].text= textToUpdate;
+            document.getElementById('message-update').innerHTML = '<div class="alert-box-update" role="alert">Todo updated !!</div>';                                             
+            setTimeout(function() {
+                document.getElementById('message-update').innerHTML = '';
+            }, 3000);
+        }
+
+        showSelected(arg){         
+            let inputId = arg.id.split('-')[1];
+            if(arg.className === 'form-control update' ){ 
+                let showSelectedLi =  document.getElementsByTagName('LI')[inputId];            
+                this.textList[inputId].checked= true;                
+                showSelectedLi.classList.toggle("checked");                
+            } else {
+                this.textList[inputId].checked= false;
+                document.getElementsByTagName('LI')[inputId].classList.toggle("checked");
+                
+            }
+              
+        }
+
+        deleteItems(){
+            if(confirm('Are you sure delete all todos!!')){  
+                this.textList = [];
+                this.showText();
+            }
+        }
+
+
+
+}
+    let myUl = document.getElementById('MyList');   
+    let listFields = new Todo(myUl);
+
+    document.addEventListener("submit", listFunction);
+    function listFunction(e) {
+        e.preventDefault();
+        let todoText  = '';
+        todoText = document.getElementById('myText').value;                
+        listFields.textAdd(todoText);        
+        document.getElementById("myText").value = "";                 
+    }
+  
+    
+</script>
+
+</body>
+</html>
